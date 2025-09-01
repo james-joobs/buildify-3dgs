@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <title>Three.js 예제</title>
+  <style>body{margin:0;overflow:hidden;}</style>
+</head>
+<body>
+<script type="module">
+  // 1️⃣  three.js core (ES‑module)
+  import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.module.js';
+
+  // 2️⃣  OrbitControls (ES‑module)
+  import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.158.0/examples/jsm/controls/OrbitControls.js';
+
+  // 3️⃣  기본 셋업
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x202020);
+
+  const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+  camera.position.set(0, 20, 30);
+
+  const renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  document.body.appendChild(renderer.domElement);
+
+  // 라이트
+  const hemi = new THREE.HemisphereLight(0xffffff, 0x444444, 1.0);
+  hemi.position.set(0, 20, 0);
+  scene.add(hemi);
+  const dir = new THREE.DirectionalLight(0xffffff, 0.8);
+  dir.position.set(-3, 10, -10);
+  scene.add(dir);
+
+  // OrbitControls
+  const controls = new OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.05;
+
+  // 그리드
+  const grid = new THREE.GridHelper(20, 20, 0x888888, 0x444444);
+  scene.add(grid);
+
+  // 애니메이션 루프
+  function animate() {
+    requestAnimationFrame(animate);
+    controls.update();          // Damping을 적용하려면 꼭 필요
+    renderer.render(scene, camera);
+  }
+  animate();
+
+  // 리사이즈
+  window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+</script>
+</body>
+</html>
