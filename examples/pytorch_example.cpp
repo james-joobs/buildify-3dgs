@@ -24,16 +24,29 @@ int main() {
     auto integration = buildify::PyTorchIntegration::create();
     integration->addGaussiansFromTensors(scene, positions, scales, rotations, colors);
     
-    std::cout << "Created scene with " << scene->getGaussianCount() << " gaussians from PyTorch tensors" << std::endl;
+    std::cout << "Added gaussians to scene from PyTorch tensors" << std::endl;
     
-    // Optimize gaussians using PyTorch
-    auto optimizer = torch::optim::Adam(scene->parameters(), 0.01);
+    // Get tensors back from the scene
+    auto scene_positions = integration->getPositionsTensor(scene);
+    auto scene_scales = integration->getScalesTensor(scene);
+    auto scene_rotations = integration->getRotationsTensor(scene);
+    auto scene_colors = integration->getColorsTensor(scene);
+    
+    // Make tensors require gradients for optimization
+    scene_positions.set_requires_grad(true);
+    scene_scales.set_requires_grad(true);
+    scene_rotations.set_requires_grad(true);
+    scene_colors.set_requires_grad(true);
+    
+    // Create optimizer with the tensors
+    std::vector<torch::Tensor> parameters = {scene_positions, scene_scales, scene_rotations, scene_colors};
+    auto optimizer = torch::optim::Adam(parameters, torch::optim::AdamOptions(0.01));
     
     for (int i = 0; i < 10; ++i) {
         optimizer.zero_grad();
         
-        // Compute loss (simplified example)
-        auto loss = scene->computeRenderingLoss();
+        // Compute a simple loss (L2 norm of positions as example)
+        auto loss = torch::mean(torch::pow(scene_positions, 2));
         
         loss.backward();
         optimizer.step();
